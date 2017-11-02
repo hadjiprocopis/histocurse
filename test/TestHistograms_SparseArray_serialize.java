@@ -53,7 +53,7 @@ public	class	TestHistograms_SparseArray_serialize {
 			} catch(Exception ex){ System.err.println("TestHistograms_SparseArray_serialize.java : main() : exception was caught:\n"+ex); ex.printStackTrace(); System.exit(1); }
 		}
 
-		outfile = "shit.obj";
+		outfile = "a_histogram.obj";
 		System.out.println("saving object to file: "+outfile);
 		Histogram.save_to_file_object(outfile, hN);
 
