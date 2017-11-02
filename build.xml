@@ -1,3 +1,5 @@
+<!-- Author: Andreas Hadjiprocopis (andreashad2@gmail.com) -->
+
 <project name="ahp.org.Histograms" default="dist" basedir=".">
 	<description>
 		build file for ahp.org.Histograms
@@ -14,6 +16,23 @@
 	<property name="dist" location="../dist"/>
 	<property name="jarPath" value="${dist}/lib"/>
 	<property name="jarName" value="${projectName}.jar"/>
+
+	<target name="git-push" depends="init">
+		<exec executable="git">
+			<arg value="add"/>
+			<arg value="*"/>
+		</exec>
+		<exec executable="git">
+			<arg value="commit"/>
+			<arg value="-am"/>
+			<arg value="commit: ${MYTIMESTAMP}"/>
+		</exec>
+		<exec executable="git">
+			<arg value="push"/>
+			<arg value="git@github.com:hadjiprocopis/histocurse.git"/>
+			<arg value="--all"/>
+		</exec>
+	</target>
 
 	<path id='compile.classpath'>
 		<fileset dir='/usr/local/apache-commons/lib'>
