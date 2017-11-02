@@ -24,7 +24,7 @@ import	ahp.org.Cartesians.*;
 import	ahp.org.Statistics.*;
 
 // the fuking generics T is the CONTAINER where we store our Histobin objs
-// e.g. new Histogram<FlatArray<Histobin>>
+// e.g. new Histogram<DenseArray<Histobin>>
 // e.g. new Histogram<SparseArray<Histobin>>
 public	class	Histogram< T extends ahp.org.Containers.Container<Histobin> > implements Serializable {
 	private static final long serialVersionUID = 1797271487L+3L;
@@ -138,7 +138,7 @@ public	class	Histogram< T extends ahp.org.Containers.Container<Histobin> > imple
 		int	num_bins[], // num of bins for each dimension
 		double	bin_widths[], // for each dimension - bin widths can differ from one dim to another BUT within a dim, binsize is same.
 		double	boundaries_start[], // left-most boundary in each dimension
-		// Java shit - specify the class of the Container (e.g. SparseArray<Histobin> or FlatArray<Histobin>) etc.
+		// Java shit - specify the class of the Container (e.g. SparseArray<Histobin> or DenseArray<Histobin>) etc.
 		Class<? extends T>	tclazz
 	) throws Exception {
 		this.myTClass = tclazz;
@@ -162,7 +162,7 @@ public	class	Histogram< T extends ahp.org.Containers.Container<Histobin> > imple
 		int	num_bins[], // num of bins for each dimension
 		double	bin_widths[], // for each dimension - bin widths can differ.
 		double	boundaries_start[], // left-most boundary in each dimension
-		// Java shit - specify the class of the Container (e.g. SparseArray<Histobin> or FlatArray<Histobin>) etc.
+		// Java shit - specify the class of the Container (e.g. SparseArray<Histobin> or DenseArray<Histobin>) etc.
 		Class<? extends T>	tclazz
 	) throws Exception {
 		this.myTClass = tclazz;
@@ -188,7 +188,7 @@ public	class	Histogram< T extends ahp.org.Containers.Container<Histobin> > imple
 		int	num_bins[], // num of bins for each dimension
 		double	bin_widths[], // for each dimension - bin widths can differ.
 		double	boundaries_start[], // left-most boundary in each dimension
-		// Java shit - specify the class of the Container (e.g. SparseArray<Histobin> or FlatArray<Histobin>) etc.
+		// Java shit - specify the class of the Container (e.g. SparseArray<Histobin> or DenseArray<Histobin>) etc.
 		Class<? extends T>	tclazz
 	) throws Exception {
 		this.myTClass = tclazz;
@@ -213,7 +213,7 @@ public	class	Histogram< T extends ahp.org.Containers.Container<Histobin> > imple
 		int	num_bins[], // num of bins for each dimension
 		double	bin_widths[], // for each dimension - bin widths can differ.
 		double	boundaries_start[], // left-most boundary in each dimension
-		// Java shit - specify the class of the Container (e.g. SparseArray<Histobin> or FlatArray<Histobin>) etc.
+		// Java shit - specify the class of the Container (e.g. SparseArray<Histobin> or DenseArray<Histobin>) etc.
 		Class<? extends T>	tclazz
 	) throws Exception {
 		this.myTClass = tclazz;
@@ -704,7 +704,7 @@ public	class	Histogram< T extends ahp.org.Containers.Container<Histobin> > imple
 	}
 	// given a value on the x-axis and one on the y-axis, find which bin it belongs to
 	// and return that bin object
-	protected	Histobin	get_bin(double ... values){
+	public	Histobin	get_bin(double ... values){
 		// this.values2coordinates() writes its results to this._my_values2coordinates_return[]
 		// which is already pre-allocated:
 		this.values2coordinates(values);
@@ -712,14 +712,14 @@ public	class	Histogram< T extends ahp.org.Containers.Container<Histobin> > imple
 	}
 	// given a bin-label (a String array, one for each bin dimension),
 	//it returns the bin object
-	protected	Histobin	get_bin(List<String> alabels) throws Exception {
+	public	Histobin	get_bin(List<String> alabels) throws Exception {
 		// NOTE: duplicate code with get_bin(String alabels[]) for efficiency
 		// if you make changes make them also there
 		int shit[];
 		if( (shit=this.labels2bin_coordinates(alabels)) == null ){ throw new Exception("Histogram.java : "+this.myName+" : get_bin() : could not find label '"+alabels.toString()+"' ([] are not part of the label!) in any of the bins/1 - skipping just this one."); }
 		return this.get_bin(shit);
 	}
-	protected	Histobin	get_bin(String alabels[]) throws Exception {
+	public	Histobin	get_bin(String alabels[]) throws Exception {
 		// NOTE: duplicate code with get_bin(List<String> alabels) for efficiency
 		// if you make changes make them also there
 		int shit[];

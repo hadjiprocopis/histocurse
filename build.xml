@@ -111,16 +111,15 @@
 	>
 		<antcall target="TestHistogramVanilla"/>
 		<!-- calling many targets from 1 target -->
-<!--
 		<antcall target="TestHistograms_SparseArray_serialize"/>
 		<antcall target="TestHistograms_SparseArray_randombins"/>
 		<antcall target="TestHistograms_SparseArray_randombins_tiny"/>
-		<antcall target="TestHistograms_FlatArray_randombins"/>
+		<antcall target="TestHistograms_DenseArray_randombins"/>
 		<antcall target="TestHistograms_SparseArray"/>
-		<antcall target="TestHistograms_FlatArray_randombins"/>
-		<antcall target="TestHistograms_FlatArray_randombins_tiny"/>
+		<antcall target="TestHistograms_SparseArray2"/>
+		<antcall target="TestHistograms_DenseArray_randombins"/>
+		<antcall target="TestHistograms_DenseArray_randombins_tiny"/>
 		<antcall target="TestHistogramVanilla"/>
--->
 	</target>
 	<target name="TestHistogramVanilla" depends="compiletest"
 		description="run the test case for 2D"
@@ -154,11 +153,11 @@
 			<arg value="-Xmx6g"/>
 		</java>
 	</target>
-	<target name="TestHistograms_FlatArray_randombins_tiny" depends="compiletest"
+	<target name="TestHistograms_DenseArray_randombins_tiny" depends="compiletest"
 		description="run the test case for 2D"
-		id="TestHistograms_FlatArray_randombins_tiny"
+		id="TestHistograms_DenseArray_randombins_tiny"
 	>
-		<java classname='TestHistograms_FlatArray_randombins_tiny'
+		<java classname='TestHistograms_DenseArray_randombins_tiny'
 			fork='true'
 		>
 			<classpath refid='runtest.classpath'/>
@@ -186,11 +185,11 @@
 			<arg value="-Xmx6g"/>
 		</java>
 	</target>
-	<target name="TestHistograms_FlatArray_randombins" depends="compiletest"
+	<target name="TestHistograms_DenseArray_randombins" depends="compiletest"
 		description="run the test case for 2D"
-		id="TestHistograms_FlatArray_randombins"
+		id="TestHistograms_DenseArray_randombins"
 	>
-		<java classname='TestHistograms_FlatArray_randombins'
+		<java classname='TestHistograms_DenseArray_randombins'
 			fork='true'
 		>
 			<classpath refid='runtest.classpath'/>
@@ -218,11 +217,11 @@
 			<arg value="-Xmx6g"/>
 		</java>
 	</target>
-	<target name="TestHistograms_FlatArray" depends="compiletest"
+	<target name="TestHistograms_DenseArray" depends="compiletest"
 		description="run the test case for 2D"
-		id="TestHistograms_FlatArray"
+		id="TestHistograms_DenseArray"
 	>
-		<java classname='TestHistograms_FlatArray'
+		<java classname='TestHistograms_DenseArray'
 			fork='true'
 		>
 			<classpath refid='runtest.classpath'/>
@@ -239,6 +238,22 @@
 		id="TestHistograms_SparseArray"
 	>
 		<java classname='TestHistograms_SparseArray'
+			fork='true'
+		>
+			<classpath refid='runtest.classpath'/>
+			<classpath>
+			      <fileset dir="${jarPath}">
+				<include name="**/${jarName}"/>
+			      </fileset>
+			</classpath>
+			<arg value="-Xmx6g"/>
+		</java>
+	</target>
+	<target name="TestHistograms_SparseArray2" depends="compiletest"
+		description="run the test case for 2D"
+		id="TestHistograms_SparseArray2"
+	>
+		<java classname='TestHistograms_SparseArray2'
 			fork='true'
 		>
 			<classpath refid='runtest.classpath'/>

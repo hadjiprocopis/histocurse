@@ -1,0 +1,23 @@
+Histogram 'hN':
+num dims : 2
+capacity : 9
+num bins : 9
+num non-empty bins : 4
+type     : flat
+total bin count: 10.0
+sparsness: 0.5555555555555556
+entropy  : -0.0
+num choices for last-but-one dim : [of 1 samples: me: 9.0, sd: 0.0, sum: 9.0, range: (9.0 to 9.0)]
+num choices for last dim : [of 3 samples: me: 3.0, sd: 0.0, sum: 9.0, range: (3.0 to 3.0)]
+
+label // boundaries // count
+<0><0> ([0.0,1.0] [0.0,1.0] ) = 0.0
+<0><1> ([0.0,1.0] [1.0,2.0] ) = 0.0
+<0><2> ([0.0,1.0] [2.0,3.0] ) = 0.0
+<1><0> ([1.0,2.0] [0.0,1.0] ) = 2.0
+<1><1> ([1.0,2.0] [1.0,2.0] ) = 5.0
+<1><2> ([1.0,2.0] [2.0,3.0] ) = 1.0
+<2><0> ([2.0,3.0] [0.0,1.0] ) = 0.0
+<2><1> ([2.0,3.0] [1.0,2.0] ) = 0.0
+<2><2> ([2.0,3.0] [2.0,3.0] ) = 2.0
+

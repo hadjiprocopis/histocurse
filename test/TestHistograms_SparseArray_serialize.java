@@ -57,7 +57,7 @@ public	class	TestHistograms_SparseArray_serialize {
 		System.out.println("saving object to file: "+outfile);
 		Histogram.save_to_file_object(outfile, hN);
 
-		Histogram<FlatArray<Histobin>> newH = Histogram.load_from_file_object(outfile);
+		Histogram<SparseArray<Histobin>> newH = Histogram.load_from_file_object(outfile);
 
 		double diff = hN.difference_in_normalised_count_L2(newH);
 		if( diff == 0.0 ){
