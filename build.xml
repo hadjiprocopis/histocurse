@@ -1,0 +1,283 @@
+<project name="ahp.org.Histograms" default="dist" basedir=".">
+	<description>
+		build file for ahp.org.Histograms
+	</description>
+	<!-- set global properties for this build -->
+	<property name="debugInfo" value="true"/>
+	<property name="verboseCompile" value="false"/>
+	<property name="projectName" value="${ant.project.name}"/>
+	<property name="MainClassName" value="${projectName}.${projectName}"/>
+	<property name="src" location="src"/>
+	<property name="backup" location=".BACKUP"/>
+	<property name="test" location="test"/>
+	<property name="build" location="build"/>
+	<property name="dist" location="../dist"/>
+	<property name="jarPath" value="${dist}/lib"/>
+	<property name="jarName" value="${projectName}.jar"/>
+
+	<path id='compile.classpath'>
+		<fileset dir='/usr/local/apache-commons/lib'>
+			 <include name='commons-math-3.6.jar'/>
+		</fileset>
+		<fileset dir='${jarPath}'>
+			 <include name='ahp.org.Cartesians.jar'/>
+			 <include name='ahp.org.Containers.jar'/>
+			 <include name='ahp.org.Statistics.jar'/>
+		</fileset>
+	</path>
+	<path id='compiletest.classpath'>
+		<path refid='compile.classpath'/>
+		<fileset dir='${jarPath}'>
+			 <include name='${jarName}'/>
+		</fileset>
+	</path>
+	<path id='run.classpath'>
+		<path refid='compile.classpath'/>
+		<path location='src'/>
+		<fileset dir='${jarPath}'>
+			 <include name='${jarName}'/>
+		</fileset>
+	</path>
+	<path id='runtest.classpath'>
+		<path refid='compiletest.classpath'/>
+		<path location='test'/>
+		<fileset dir='${jarPath}'>
+			 <include name='${jarName}'/>
+		</fileset>
+	</path>
+
+	<target name="init">
+		<!-- Create the time stamp -->
+		<tstamp>
+			<format property="FUCKYOUTIMESTAMP"
+			pattern="dd_MM_yyyy.HH_mm"/>
+		</tstamp>
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}"/>
+	</target>
+
+	<target name="compile" depends="init"
+		description="compile the source"
+	>
+		<!-- Compile the java code from ${src} into ${build} -->
+		<javac srcdir="${src}" destdir="${build}"
+			includeantruntime="false"
+			debug="${debugInfo}"
+			verbose="${verboseCompile}"
+		>
+			<!--<compilerarg line="-Xlint:unchecked"/>-->
+			<compilerarg line="-Xdiags:verbose"/>
+			<compilerarg line="-Xlint:unchecked"/>
+			<classpath refid='compile.classpath'/>
+		</javac>
+	</target>
+
+	<target name="compiletest" depends="dist"
+		description="compile the test files"
+	>
+		<!-- Compile the java code from ${test} and leave there -->
+		<javac srcdir="${test}" destdir="${test}"
+			includeantruntime="false"
+			debug="${debugInfo}"
+			verbose="${verboseCompile}"
+		>
+			<compilerarg line="-Xdiags:verbose"/>
+			<compilerarg line="-Xlint:unchecked"/>
+			<classpath refid='compiletest.classpath'/>
+		</javac>
+	</target>
+
+	<target name="test" depends="compiletest"
+		description="run ALL the tests"
+	>
+		<antcall target="TestHistogramVanilla"/>
+		<!-- calling many targets from 1 target -->
+<!--
+		<antcall target="TestHistograms_SparseArray_serialize"/>
+		<antcall target="TestHistograms_SparseArray_randombins"/>
+		<antcall target="TestHistograms_SparseArray_randombins_tiny"/>
+		<antcall target="TestHistograms_FlatArray_randombins"/>
+		<antcall target="TestHistograms_SparseArray"/>
+		<antcall target="TestHistograms_FlatArray_randombins"/>
+		<antcall target="TestHistograms_FlatArray_randombins_tiny"/>
+		<antcall target="TestHistogramVanilla"/>
+-->
+	</target>
+	<target name="TestHistogramVanilla" depends="compiletest"
+		description="run the test case for 2D"
+		id="TestHistogramVanilla"
+	>
+		<java classname='TestHistogramVanilla'
+			fork='true'
+		>
+			<classpath refid='runtest.classpath'/>
+			<classpath>
+			      <fileset dir="${jarPath}">
+				<include name="**/${jarName}"/>
+			      </fileset>
+			</classpath>
+			<arg value="-Xmx6g"/>
+		</java>
+	</target>
+	<target name="TestHistograms_SparseArray_serialize" depends="compiletest"
+		description="run the test case for 2D"
+		id="TestHistograms_SparseArray_serialize"
+	>
+		<java classname='TestHistograms_SparseArray_serialize'
+			fork='true'
+		>
+			<classpath refid='runtest.classpath'/>
+			<classpath>
+			      <fileset dir="${jarPath}">
+				<include name="**/${jarName}"/>
+			      </fileset>
+			</classpath>
+			<arg value="-Xmx6g"/>
+		</java>
+	</target>
+	<target name="TestHistograms_FlatArray_randombins_tiny" depends="compiletest"
+		description="run the test case for 2D"
+		id="TestHistograms_FlatArray_randombins_tiny"
+	>
+		<java classname='TestHistograms_FlatArray_randombins_tiny'
+			fork='true'
+		>
+			<classpath refid='runtest.classpath'/>
+			<classpath>
+			      <fileset dir="${jarPath}">
+				<include name="**/${jarName}"/>
+			      </fileset>
+			</classpath>
+			<arg value="-Xmx6g"/>
+		</java>
+	</target>
+	<target name="TestHistograms_SparseArray_randombins_tiny" depends="compiletest"
+		description="run the test case for 2D"
+		id="TestHistograms_SparseArray_randombins_tiny"
+	>
+		<java classname='TestHistograms_SparseArray_randombins_tiny'
+			fork='true'
+		>
+			<classpath refid='runtest.classpath'/>
+			<classpath>
+			      <fileset dir="${jarPath}">
+				<include name="**/${jarName}"/>
+			      </fileset>
+			</classpath>
+			<arg value="-Xmx6g"/>
+		</java>
+	</target>
+	<target name="TestHistograms_FlatArray_randombins" depends="compiletest"
+		description="run the test case for 2D"
+		id="TestHistograms_FlatArray_randombins"
+	>
+		<java classname='TestHistograms_FlatArray_randombins'
+			fork='true'
+		>
+			<classpath refid='runtest.classpath'/>
+			<classpath>
+			      <fileset dir="${jarPath}">
+				<include name="**/${jarName}"/>
+			      </fileset>
+			</classpath>
+			<arg value="-Xmx6g"/>
+		</java>
+	</target>
+	<target name="TestHistograms_SparseArray_randombins" depends="compiletest"
+		description="run the test case for 2D"
+		id="TestHistograms_SparseArray_randombins"
+	>
+		<java classname='TestHistograms_SparseArray_randombins'
+			fork='true'
+		>
+			<classpath refid='runtest.classpath'/>
+			<classpath>
+			      <fileset dir="${jarPath}">
+				<include name="**/${jarName}"/>
+			      </fileset>
+			</classpath>
+			<arg value="-Xmx6g"/>
+		</java>
+	</target>
+	<target name="TestHistograms_FlatArray" depends="compiletest"
+		description="run the test case for 2D"
+		id="TestHistograms_FlatArray"
+	>
+		<java classname='TestHistograms_FlatArray'
+			fork='true'
+		>
+			<classpath refid='runtest.classpath'/>
+			<classpath>
+			      <fileset dir="${jarPath}">
+				<include name="**/${jarName}"/>
+			      </fileset>
+			</classpath>
+			<arg value="-Xmx6g"/>
+		</java>
+	</target>
+	<target name="TestHistograms_SparseArray" depends="compiletest"
+		description="run the test case for 2D"
+		id="TestHistograms_SparseArray"
+	>
+		<java classname='TestHistograms_SparseArray'
+			fork='true'
+		>
+			<classpath refid='runtest.classpath'/>
+			<classpath>
+			      <fileset dir="${jarPath}">
+				<include name="**/${jarName}"/>
+			      </fileset>
+			</classpath>
+			<arg value="-Xmx6g"/>
+		</java>
+	</target>
+
+	<target name="backup" depends="init"
+		description="make a backup"
+	>
+		<tar destfile="${backup}/${FUCKYOUTIMESTAMP}.tgz"
+			compression="gzip"
+		>
+			<tarfileset dir="${test}" preserveLeadingSlashes="true" casesensitive="yes">
+				<patternset>
+					<include name="**/*.java"/>
+				</patternset>
+			</tarfileset>
+			<tarfileset dir="${src}" preserveLeadingSlashes="true" casesensitive="yes">
+				<patternset>
+					<include name="**/*.java"/>
+				</patternset>
+			</tarfileset>
+			<fileset dir="." casesensitive="yes">
+				<filename name="build.xml"/>
+			</fileset>
+		</tar>
+	</target>
+
+	<target name="dist" depends="compile"
+				description="generate the distribution"
+	>
+		<!-- Create the distribution directory -->
+		<mkdir dir="${jarPath}"/>
+
+		<!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
+		<!-- <jar jarfile="${jarPath}/MyProject-${DSTAMP}.jar" basedir="${build}"/>-->
+		<jar jarfile="${jarPath}/${jarName}" basedir="${build}"/>
+	</target>
+
+	<target name="all" depends="clean,compile,dist"/>
+
+	<target name="clean"
+		description="clean up"
+	>
+		<!-- Delete the ${build} and ${dist} directory trees -->
+		<delete dir="${build}"/>
+		<delete>
+			<fileset dir="${test}" includes="**/*.class"/>
+		</delete>
+		<delete>
+			<fileset dir="${jarPath}" includes="**/${jarName}"/>
+		</delete>
+
+	</target>
+</project>

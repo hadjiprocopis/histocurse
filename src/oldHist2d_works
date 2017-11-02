@@ -1,0 +1,441 @@
+package	ahp.org.Histograms;
+
+import	java.util.Random;
+import  java.io.FileNotFoundException;
+import  java.io.PrintWriter;
+import	java.util.Comparator;
+import	java.util.Arrays;
+
+public	class	Histogram2D {
+	private	int		myNumBinsX,
+				myNumBinsY,
+				myNumTotalBins;
+	private	Histobin2D[][]	myBins;
+	private	double		myBinWidthX,
+				myBinWidthY;
+
+	// discreet cumulative density function
+	// normalises the bins to Sum(counts) = 1 and then 
+	// adds the counts
+	private	Histobin2D[]	myCumBins;
+	// the leftmost and rightmost bin coordinates
+	// to define the range of the inputs to the bins
+	private double		myBinsXLeftBoundary,
+				myBinsXRightBoundary,
+				myBinsYLeftBoundary,
+				myBinsYRightBoundary;
+	// a flag which is set every time a value is added or removed
+	// it indicates that the bin's predictor must be re-calculated.
+	private	boolean		myNeedRecalculate;
+
+	// comparator to sort cumbins array wrt to the cum_count content
+	private	Histobin2D_Comparator myCumBinsComparator = new Histobin2D_Comparator();
+
+	public	Histogram2D clone(){
+		Histogram2D ahist = null;
+		try {
+			ahist =new Histogram2D(
+				this.myNumBinsX, this.myNumBinsY,
+				this.myBinWidthX, this.myBinWidthY,
+				this.myBinsXLeftBoundary, myBinsYLeftBoundary
+			);
+		} catch(Exception ex){ System.err.println("Histogram2D.java : clone() : exception was caught while creating cloned histogram."); return(null); }
+		int	i, j;
+		for(i=this.myNumBinsX;i-->0;){
+			for(j=this.myNumBinsX;j-->0;){
+				this.myBins[i][j].copy(ahist.bin(i,j));
+			}
+		}
+		return ahist;
+	}
+	public	Histobin2D	bin(int i, int j){ return this.myBins[i][j]; }
+	public	void	reset(){
+		for(int i=this.myNumTotalBins;i-->0;){ this.myCumBins[i].reset(); }
+	}
+	public	Histogram2D(
+		int	num_binsX,
+		int	num_binsY,
+		double	bin_widthX,
+		double	bin_widthY,
+		double	start_fromX, // bins' leftmost boundary (not center)
+		double	start_fromY // bins' leftmost boundary (not center)
+	) throws Exception {
+		if( ! this._setup_bins(num_binsX, num_binsY, bin_widthX, bin_widthY, start_fromX, start_fromY) ){
+			System.err.println("Histogram2D.java : constructor1 : call to _setup_bins() has failed.");
+			throw new Exception("Histogram2D.java : constructor1 : call to _setup_bins() has failed.");
+		}
+		if( ! this._setup_labels(null) ){
+			// just a warning
+			System.err.println("Histogram2D.java : _setup() : call to _setup_labels() has failed. No labels will be setup but the bins are OK and will continue.");
+		}
+	}
+	public	Histogram2D(
+		int	num_binsX,
+		int	num_binsY,
+		double	bin_widthX,
+		double	bin_widthY,
+		double	start_fromX, // bins' leftmost boundary (not center)
+		double	start_fromY, // bins' leftmost boundary (not center)
+		String[][] labels // optional
+	) throws Exception {
+		if( ! this._setup_bins(num_binsX, num_binsY, bin_widthX, bin_widthY, start_fromX, start_fromY) ){
+			System.err.println("Histogram2D.java : constructor1 : call to _setup_bins() has failed.");
+			throw new Exception("Histogram2D.java : constructor1 : call to _setup_bins() has failed.");
+		}
+		if( ! this._setup_labels(labels) ){
+			// just a warning
+			System.err.println("Histogram2D.java : _setup() : call to _setup_labels() has failed. No labels will be setup but the bins are OK and will continue.");
+		}
+	}
+
+	private	void	_make_default_labels(){
+		int	num_binsX = this.myNumBinsX;
+		int	num_binsY = this.myNumBinsY, i, j;
+		// automatic labels
+		for(i=num_binsX;i-->0;){
+			for(j=num_binsY;j-->0;){
+				this.myBins[i][j].label = (i+1)+","+(j+1);
+			}
+		}
+	}
+	// this function must be called after bins have been setup (_setup())
+	private	boolean	_setup_labels(String[][] labels){
+		int	num_binsX = this.myNumBinsX;
+		int	num_binsY = this.myNumBinsY, i, j;
+		if( labels == null ){
+			// make default labels
+			this._make_default_labels();
+		} else {
+			if( (labels.length != num_binsX) || (labels[0].length != num_binsY) ){
+				System.err.println("Histogram2D.java: _setup() : WARNING : number of bins "+num_binsX+" must be the same as the number of bin labels, "+labels.length+" and "+num_binsY+" the same as "+labels[0].length+". Bin labels will be ignored.");
+				return false;
+			} else {
+				for(i=num_binsX;i-->0;){
+					for(j=num_binsY;j-->0;){
+						this.myBins[i][j].label = new String(labels[i][j]);
+					}
+				}
+			}
+		}
+		return true;
+	}
+	private	boolean	_setup_bins(
+		int	num_binsX,
+		int	num_binsY,
+		double	bin_widthX,
+		double	bin_widthY,
+		// this is not where the first bincentre is!
+		// this is where the left boundary of the first bin is:
+		double	start_fromX,
+		double	start_fromY
+	){
+		this.myNumBinsX = num_binsX;
+		this.myNumBinsY = num_binsY;
+		this.myNumTotalBins = num_binsX * num_binsY;
+
+		this.myBinsXLeftBoundary = start_fromX;
+		this.myBinsYLeftBoundary = start_fromY;
+		this.myBinsXRightBoundary = start_fromX + num_binsX * bin_widthX;
+		this.myBinsYRightBoundary = start_fromY + num_binsY * bin_widthY;
+
+		this.myBinWidthX = bin_widthX;
+		this.myBinWidthY = bin_widthY;
+
+		this.myBins = new Histobin2D[num_binsX][];
+		// flat cumbins it is a 1D array of all the cumbins (which is a 2D array)
+		// it contains references to the already existing bins
+		this.myCumBins = new Histobin2D[this.myNumTotalBins];
+
+		int i, j, k;
+		double	lbX = start_fromX,
+			rbX = lbX + bin_widthX,
+			lbY, rbY;
+		for(i=0,k=0;i<num_binsX;i++){
+			this.myBins[i] = new Histobin2D[num_binsY];
+			lbY = start_fromY;
+			rbY = lbY + bin_widthY;
+			for(j=0;j<num_binsY;j++){
+				this.myBins[i][j] = new Histobin2D(
+					i, j,
+					0,
+					lbX, rbX,
+					lbY, rbY
+				);
+				// the cumbins is a 1D array (as opposed to the 2D of bins)
+				// and it holds references to the myBins
+				// we do that in order to sort it wrt cum_count
+				this.myCumBins[k++] = this.myBins[i][j];
+				lbY += bin_widthY;
+				rbY += bin_widthY;
+			}
+			lbX += bin_widthX;
+			rbX += bin_widthX;
+		}
+		this.myNeedRecalculate = false;
+
+		return true;
+	}
+	// will construct the discreet cumulative density function
+	// which will be used to output a random value based on the distribution
+	// represented by this histogram. Every time a bin changes, this
+	// needs to be recalculated
+	// but it is better to have a flag and whenever a prediction is required
+	// then this function maybe called.
+	private	void	recalculate_predictors(){
+		if( this.myNeedRecalculate == false ){ return; }
+		double	totalsum, asum;
+		int	NX = this.myNumBinsX,
+			NY = this.myNumBinsY,
+			N = this.myNumTotalBins,
+			i, j, I, J, k;
+		for(totalsum=0.0,k=N;k-->0;){
+			totalsum += this.myCumBins[k].count;
+		}
+
+		// basically what we do in order to get a random bin proportional to the histogram's PDF
+		// is to put all the bins side-by-side their length representing their count
+		// just like sticks of wood.
+		// then throw a uniform-random stone on them and see where it lands.
+		// most of the times will land on the most-counts stick of wood (or bin)
+		// monte carlo.
+		// but we have a bit of a problem in finding where the stone lands (in computers only)
+		// so we put all the bins side-by-side and order is not important (e.g. a simple i-j loop over all bins)
+		// this creates the CumBins array.
+		// then in this array we sum the normalised counts (norm_count) to get the cumulative count
+		// each bin with all its previous (on the left). Cum count finally arrives at 1.
+		// and so get a uniform-random number (from 0 to 1), then start going
+		// down the array of CumBins checking if that number is > than the current bin cum bin
+		// and when it is then we have the bin we have landed to, and so then get its
+		// value or a random value within its bounds.
+		Histobin2D abin = this.myCumBins[0];
+		// the case for k=0:
+		abin.norm_count = abin.cum_count = abin.count / totalsum;
+		for(k=1;k<N;k++){
+			abin = this.myCumBins[k];
+			abin.norm_count = abin.count / totalsum;
+			abin.cum_count = abin.norm_count + this.myCumBins[k-1].cum_count;
+		}
+/*		for(i=0;i<NX;i++){
+			for(j=0;j<NY;j++){
+				abin = this.myBins[i][j];
+				// normalised count:
+				abin.norm_count = abin.count / totalsum;
+
+				// the cumbins of i,j is formed by the sum of the bins of the rectangle(0,0,i,j) incl.
+				// this is the rectangle:
+				for(asum=0.0,I=0;I<=i;I++) for(J=0;J<=j;J++) asum += this.myBins[I][J].count;
+				abin.cum_count = asum / totalsum;
+			}
+		}
+*/
+		// and now sort the cumbins flat wrt to content (v)
+//		Arrays.sort(this.myCumBins, this.myCumBinsComparator);
+//		for(Histobin2D shit : this.myCumBins){ System.out.println("shit:"+shit); }
+//		System.exit(1);
+		this.myNeedRecalculate = false;
+	}
+	// given a value on the x-axis and one on the y-axis, find which bin it belongs to
+	// returns the bin coordinates as a 2-array of int
+	private	int[]	get_bin_index(double x, double y){
+		return new int[]{
+			(int )(Math.floor((x-this.myBinsXLeftBoundary)/this.myBinWidthX)),
+			(int )(Math.floor((y-this.myBinsYLeftBoundary)/this.myBinWidthY))
+		};
+	}
+	// given a value on the x-axis and one on the y-axis, find which bin it belongs to
+	// and return that bin object
+	private	Histobin2D	get_bin(double x, double y){
+		return this.myBins
+			[(int )(Math.floor((x-this.myBinsXLeftBoundary)/this.myBinWidthX))]
+			[(int )(Math.floor((y-this.myBinsYLeftBoundary)/this.myBinWidthY))]
+		;
+	}
+	// add a value to the corresponding bin - increment its count
+	public	void	add(double x, double y){
+		Histobin2D abin = this.get_bin(x,y);
+		abin.count++;
+		this.myNeedRecalculate = true;
+	}
+	public	void	remove(double x, double y){
+		Histobin2D abin = this.get_bin(x,y);
+		if( abin.count == 0 ){ return; }
+		abin.count--;
+		this.myNeedRecalculate = true;
+	}
+	// returns a 2array of random bin index based on bins contents, i.e. most
+	// popular bins will have more chance of being selected
+	// this is basically an attempt to re-create the distribution
+	public	int[]	random_bin_index(Random arng){
+		// RNG nextDouble : must be between 0 and 1:
+		double anum = arng.nextDouble();
+		Histobin2D abin = this.random_bin(arng);
+		return new int[]{ abin.i, abin.j };
+	}
+	public	Histobin2D	random_bin(Random arng){
+		this.recalculate_predictors();
+		// RNG nextDouble : must be between 0 and 1:
+		double anum = arng.nextDouble();
+		for(int k=this.myNumTotalBins;k-->0;){
+			if( anum >= this.myCumBins[k].cum_count ){
+				return	this.myCumBins[k];
+			}
+		}
+		System.err.println("should not come here\n");		
+		return this.myCumBins[0];
+	}
+	// get a random bin and then get a random number within the range of that bin
+	// which of course is 2D so the returned value is a 2array of (x,y)
+	public	double[]	random_value(Random arng){
+		Histobin2D	abin = this.random_bin(arng);
+		double	valX, valY;
+		valX = abin.left_boundaryX + this.myBinWidthX * arng.nextDouble();
+		valY = abin.left_boundaryY + this.myBinWidthY * arng.nextDouble();
+		return new double[]{valX, valY};
+	}
+	public	double	bins_left_boundaryX(){ return this.myBinsXLeftBoundary; }
+	public	double	bins_right_boundaryX(){ return this.myBinsXRightBoundary; }
+	public	double	bins_left_boundaryY(){ return this.myBinsYLeftBoundary; }
+	public	double	bins_right_boundaryY(){ return this.myBinsYRightBoundary; }
+	public	int	num_binsX(){ return this.myNumBinsX; }
+	public	int	num_binsY(){ return this.myNumBinsY; }
+	public	int	num_total_bins(){ return this.myNumTotalBins; }
+	public	String	toString(){
+		StringBuilder	buffer = new StringBuilder();
+		int	NX = this.myNumBinsX,
+			NY = this.myNumBinsY,
+			i, j;
+		Histobin2D	abin;
+		this.recalculate_predictors();
+		for(i=0;i<NX;i++){
+			for(j=0;j<NY;j++){
+				abin = this.myBins[i][j];
+				buffer.append(
+					abin.label
+					+" ("
+						+abin.left_boundaryX+","+abin.right_boundaryX
+						+","+abin.left_boundaryY+","+abin.right_boundaryY
+					+") = "
+					+abin.count
+					+"\n"
+				);
+			}
+		}
+		return buffer.toString();
+	}
+	public  boolean save_to_file_txt(String afilename) {
+		this.recalculate_predictors();
+		try {
+			PrintWriter out =new PrintWriter(afilename);
+			int	NX = this.myNumBinsX,
+				NY = this.myNumBinsY,
+				i, j;
+			Histobin2D	abin;
+			for(i=0;i<NX;i++){
+				for(j=0;j<NY;j++){
+					abin = this.myBins[i][j];
+					out.println(
+						abin.i+"\t"+abin.j+"\t"
+						+abin.count
+					);
+				}
+			}
+			out.close();
+			return true;
+		} catch(FileNotFoundException fed){
+			System.err.println("Blob2D.save_to_file_txt() : error saving blob to file '"+afilename+"', exception was caught: "+fed);
+			fed.printStackTrace();
+		}
+		return false;
+	}
+	public	boolean	dump_random_values_to_file(String afilename, int num_values){
+		this.recalculate_predictors();
+		try {
+			PrintWriter out =new PrintWriter(afilename);
+			Random arng = new Random();
+			double[] arv;
+			for(int i=num_values;i-->0;){
+				arv = this.random_value(arng);
+				out.println(arv[0]+"\t"+arv[1]);
+			}
+			out.close();
+			return true;
+		} catch(FileNotFoundException fed){
+			System.err.println("Blob2D.save_to_file_txt() : error saving blob to file '"+afilename+"', exception was caught: "+fed);
+			fed.printStackTrace();
+		}
+		return false;		
+	}
+}
+class   Histobin2D implements Comparable<Histobin2D> {
+	String	label;
+	int	i, j;
+	double	count = 0.0; // just the count
+	double	norm_count = 0.0; // the normalised count
+	double	cum_count = 0.0; // the normalised cumulative count
+	double	left_boundaryX,
+		right_boundaryX,
+		left_boundaryY,
+		right_boundaryY;
+	public Histobin2D(int _i, int _j, double c, double lbX, double rbX, double lbY, double rbY){
+		this.set(_i, _j, c, lbX, rbX, lbY, rbY);
+	}
+	public	void	reset(){
+		// resets the bin counts (not widths, number of bins etc.)
+		this.count = 0;
+		this.norm_count = 0.0;
+		this.cum_count = 0.0;
+	}
+	public  void    set(int _i, int _j, double c, double lbX, double rbX, double lbY, double rbY){
+		this.i = _i;
+		this.j = _j;
+		this.count = c;
+		this.left_boundaryX = lbX;
+		this.right_boundaryX = rbX;
+		this.left_boundaryY = lbY;
+		this.right_boundaryY = rbY;
+	}
+	public	int	compareTo(Histobin2D another_histobin){
+		double	shit = this.cum_count - another_histobin.cum_count;
+		if( shit > 0.0 ){ return 1; }
+		else if( shit < 0.0 ){ return -1; }
+		return 0;
+	}
+	// copy all our values to the destination obj
+	public	void	copy(Histobin2D destination_obj){
+		destination_obj.i = this.i;
+		destination_obj.j = this.j;
+		destination_obj.count = this.count;
+		destination_obj.left_boundaryX = this.left_boundaryX;
+		destination_obj.right_boundaryX = this.right_boundaryX;
+		destination_obj.left_boundaryY = this.left_boundaryY;
+		destination_obj.right_boundaryY = this.right_boundaryY;
+
+		destination_obj.label = new String(this.label);
+		destination_obj.cum_count = this.cum_count;
+		destination_obj.norm_count = this.norm_count;
+	}
+	public	Histobin2D clone(){
+		Histobin2D ahistobin = new Histobin2D(
+			this.i,
+			this.j,
+			this.count,
+			this.left_boundaryX,
+			this.right_boundaryX,
+			this.left_boundaryY,
+			this.right_boundaryY
+		);
+		ahistobin.label = this.label;
+		ahistobin.cum_count = this.cum_count;
+		ahistobin.norm_count = this.norm_count;
+
+		return ahistobin;
+	}
+	public	String	toString(){
+		return new String(this.label+" = "+this.count+", "+this.norm_count+", "+this.cum_count);
+	}
+}
+class Histobin2D_Comparator implements Comparator<Histobin2D> {
+	public int compare(Histobin2D o1, Histobin2D o2) {
+ 		return o1.compareTo(o2);
+	}
+}
