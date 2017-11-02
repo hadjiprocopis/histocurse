@@ -9,6 +9,13 @@ as they usually do but can be in N-dimensions.
 N can be large. In the case of large N, it is better to
 use the <SparseArray> back-store.
 
+This module depends on the following modules in this
+repository:<br/>
+containers (https://github.com/hadjiprocopis/containers)
+statistics (https://github.com/hadjiprocopis/statistics)
+cartesian (https://github.com/hadjiprocopis/cartesian)
+hadjiprocopis_utils (https://github.com/hadjiprocopis/hadjiprocopis_utils)
+
 Here is an example on how to use this module:
 
 ```
