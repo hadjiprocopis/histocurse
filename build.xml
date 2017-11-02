@@ -68,7 +68,7 @@
 	<target name="init">
 		<!-- Create the time stamp -->
 		<tstamp>
-			<format property="FUCKYOUTIMESTAMP"
+			<format property="MYTIMESTAMP"
 			pattern="dd_MM_yyyy.HH_mm"/>
 		</tstamp>
 		<!-- Create the build directory structure used by compile -->
@@ -254,7 +254,7 @@
 	<target name="backup" depends="init"
 		description="make a backup"
 	>
-		<tar destfile="${backup}/${FUCKYOUTIMESTAMP}.tgz"
+		<tar destfile="${backup}/${MYTIMESTAMP}.tgz"
 			compression="gzip"
 		>
 			<tarfileset dir="${test}" preserveLeadingSlashes="true" casesensitive="yes">
